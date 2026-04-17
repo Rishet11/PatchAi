@@ -3,7 +3,9 @@
 import React, { useState, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { usePatchAIStore } from '@/store/patchai';
-import { AGENT_CONFIG, ARTIFACT_ICONS } from '@/lib/constants';
+import { AGENT_CONFIG, ARTIFACT_ICONS, ARTIFACT_LABELS } from '@/lib/constants';
+import { AgentIcon, ArtifactIcon } from '@/lib/icons';
+import { ArtifactIconKey } from '@/lib/constants';
 import { GraphNode } from '@/lib/types';
 import {
   Scissors, Sprout, GitBranch, Copy, Pencil, Save, X,
@@ -134,7 +136,7 @@ export default function NodeDetailPanel() {
   }
 
   const agentCfg = AGENT_CONFIG[node.agent];
-  const artifactIcon = ARTIFACT_ICONS[node.artifactType];
+  const artifactLabel = ARTIFACT_LABELS[node.artifactType];
   const nodeAudit = auditLog.filter(e => e.nodeId === node.id);
   const language = getMonacoLanguage(node);
 
@@ -148,11 +150,13 @@ export default function NodeDetailPanel() {
         </div>
         <div className="node-detail__title">{node.title}</div>
         <div className="node-detail__tags">
-          <span className="tag tag-agent" style={{ background: `${agentCfg.bgColor}`, color: agentCfg.color, borderColor: `${agentCfg.color}40` }}>
+          <span className="tag tag-agent" style={{ background: `${agentCfg.bgColor}`, color: agentCfg.color, borderColor: `${agentCfg.color}40`, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <AgentIcon iconKey={agentCfg.iconKey} size={10} strokeWidth={2} />
             {agentCfg.name}
           </span>
-          <span className="tag tag-artifact">
-            {artifactIcon} {node.artifactType.replace('_', ' ')}
+          <span className="tag tag-artifact" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <ArtifactIcon iconKey={ARTIFACT_ICONS[node.artifactType] as ArtifactIconKey} size={10} strokeWidth={2} />
+            {artifactLabel}
           </span>
           {node.humanOverride && (
             <span className="badge badge-cyan" style={{ fontSize: 10 }}>HUMAN OVERRIDE</span>

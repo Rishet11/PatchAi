@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { GraphNode } from '@/lib/types';
 import { AGENT_CONFIG } from '@/lib/constants';
-import { Search, Scissors, Sprout, GitBranch, User, Cpu } from 'lucide-react';
+import { Search, Scissors, Sprout, GitBranch, User, Cpu, Syringe } from 'lucide-react';
 
 interface ContextMenuProps {
   x: number;
@@ -13,12 +13,13 @@ interface ContextMenuProps {
   onPrune: (id: string) => void;
   onRevive: (id: string) => void;
   onBranch: (id: string) => void;
+  onInject: (id: string) => void;
   onInspect: (id: string) => void;
   onClose: () => void;
 }
 
 export function ContextMenu({
-  x, y, nodeId, node, onPrune, onRevive, onBranch, onInspect, onClose
+  x, y, nodeId, node, onPrune, onRevive, onBranch, onInject, onInspect, onClose
 }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isPruned = node?.status === 'pruned';
@@ -81,6 +82,12 @@ export function ContextMenu({
           <span>Revive Branch</span>
         </button>
       )}
+
+      {/* Inject sibling */}
+      <button className="context-menu__item" onClick={() => onInject(nodeId)}>
+        <Syringe size={14} strokeWidth={1.5} />
+        <span>Inject Sibling Node</span>
+      </button>
 
       {/* Branch from here */}
       <button className="context-menu__item" onClick={() => onBranch(nodeId)}>

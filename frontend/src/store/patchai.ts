@@ -25,6 +25,7 @@ interface UIState {
   isDemoRunning: boolean;
   notificationTrayOpen: boolean;
   unreadCount: number;
+  graphSearchQuery: string;
 }
 
 interface PatchAIStore extends ExecutionState, UIState {
@@ -71,6 +72,7 @@ interface PatchAIStore extends ExecutionState, UIState {
   setShowOnboarding: (show: boolean) => void;
   setDemoRunning: (running: boolean) => void;
   setNotificationTrayOpen: (open: boolean) => void;
+  setGraphSearchQuery: (q: string) => void;
 
   // Reset
   resetState: () => void;
@@ -163,6 +165,7 @@ const INITIAL_UI: UIState = {
   isDemoRunning: false,
   notificationTrayOpen: false,
   unreadCount: 0,
+  graphSearchQuery: '',
 };
 
 let notifIdCounter = 0;
@@ -372,6 +375,7 @@ export const usePatchAIStore = create<PatchAIStore>()(
     setShowOnboarding: (show) => set({ showOnboarding: show }),
     setDemoRunning: (running) => set({ isDemoRunning: running }),
     setNotificationTrayOpen: (open) => set({ notificationTrayOpen: open }),
+    setGraphSearchQuery: (q) => set({ graphSearchQuery: q }),
 
     resetState: () => set({
       ...INITIAL_STATE,

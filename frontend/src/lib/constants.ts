@@ -4,68 +4,64 @@
 
 import { AgentRole, NodeStatus, ArtifactType } from './types';
 
+// Lucide icon name mapping — NO emoji strings in this file
+export type AgentIconKey = 'ListTodo' | 'Code2' | 'Eye' | 'FlaskConical' | 'Scale' | 'User';
+export type ArtifactIconKey = 'ClipboardList' | 'FileCode' | 'FileText' | 'TestTube' | 'Zap' | 'ScrollText' | 'MessageCircle';
+
 export const AGENT_CONFIG: Record<AgentRole, {
   name: string;
-  icon: string;
+  iconKey: AgentIconKey;
   color: string;
   bgColor: string;
   borderColor: string;
-  glowColor: string;
   description: string;
 }> = {
   planner: {
     name: 'Planner',
-    icon: '📋', /* Removed silly brain emoji */
+    iconKey: 'ListTodo',
     color: '#3b82f6',
     bgColor: 'rgba(59, 130, 246, 0.1)',
     borderColor: '#2563eb',
-    glowColor: 'transparent',
     description: 'Decomposes goals into executable plans',
   },
   coder: {
     name: 'Coder',
-    icon: '💻',
+    iconKey: 'Code2',
     color: '#22c55e',
     bgColor: 'rgba(34, 197, 94, 0.1)',
     borderColor: '#16a34a',
-    glowColor: 'transparent',
     description: 'Implements features and fixes bugs',
   },
   reviewer: {
     name: 'Reviewer',
-    icon: '🔍',
+    iconKey: 'Eye',
     color: '#f59e0b',
     bgColor: 'rgba(245, 158, 11, 0.1)',
     borderColor: '#d97706',
-    glowColor: 'transparent',
     description: 'Reviews code quality and correctness',
   },
   tester: {
     name: 'Tester',
-    icon: '⚙️', /* Removed test-tube emoji */
+    iconKey: 'FlaskConical',
     color: '#ef4444',
     bgColor: 'rgba(239, 68, 68, 0.1)',
     borderColor: '#dc2626',
-    glowColor: 'transparent',
     description: 'Writes and runs test suites',
   },
   evaluator: {
     name: 'Evaluator',
-    icon: '⚡', /* Removed scales of justice emoji */
+    iconKey: 'Scale',
     color: '#a855f7',
     bgColor: 'rgba(168, 85, 247, 0.1)',
     borderColor: '#9333ea',
-    glowColor: 'transparent',
     description: 'Monitors branch quality and proposes pruning',
   },
   human: {
     name: 'Human',
-    icon: '👤',
+    iconKey: 'User',
     color: '#06b6d4',
     bgColor: 'rgba(6, 182, 212, 0.1)',
     borderColor: '#0891b2',
-    glowColor: 'transparent',
-
     description: 'Human operator intervention',
   },
 };
@@ -84,14 +80,25 @@ export const NODE_STATUS_CONFIG: Record<NodeStatus, {
   waiting: { label: 'Waiting', color: '#fbbf24', dotColor: '#fbbf24', pulse: true },
 };
 
-export const ARTIFACT_ICONS: Record<ArtifactType, string> = {
-  plan: '📋',
-  code: '📄',
-  review: '📝',
-  test_report: '🧾',
-  decision: '⚡',
-  policy: '📜',
-  message: '💬',
+export const ARTIFACT_ICONS: Record<ArtifactType, ArtifactIconKey> = {
+  plan: 'ClipboardList',
+  code: 'FileCode',
+  review: 'FileText',
+  test_report: 'TestTube',
+  decision: 'Zap',
+  policy: 'ScrollText',
+  message: 'MessageCircle',
+};
+
+// Helper to get artifact label
+export const ARTIFACT_LABELS: Record<ArtifactType, string> = {
+  plan: 'Plan',
+  code: 'Code',
+  review: 'Review',
+  test_report: 'Test Report',
+  decision: 'Decision',
+  policy: 'Policy',
+  message: 'Message',
 };
 
 export const POLICY_RULES_DEFAULT = [

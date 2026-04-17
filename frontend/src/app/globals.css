@@ -1230,3 +1230,166 @@ body {
 .badge-amber { background: var(--accent-amber-dim); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
 .badge-red { background: var(--accent-red-dim); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
 .badge-cyan { background: var(--accent-cyan-dim); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+
+/* ==========================================
+   Responsive Breakpoints
+   ========================================== */
+
+/* Large screens ≥ 1400px — wider sidebar */
+@media (min-width: 1400px) {
+  .right-sidebar {
+    width: 380px;
+  }
+}
+
+/* Medium-large screens 1024–1199px — compressed sidebar */
+@media (max-width: 1199px) {
+  .right-sidebar {
+    width: 300px;
+    min-width: 300px;
+  }
+
+  .status-bar {
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .stat-chip {
+    display: none;
+  }
+
+  /* Show only critical stats */
+  .stat-chip:first-of-type,
+  .stat-chip--active:first-of-type,
+  .run-indicator {
+    display: flex;
+  }
+}
+
+/* Tablet 768–1023px — stacked layout, sidebar becomes bottom drawer */
+@media (max-width: 1023px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px 1fr 300px;
+    grid-template-areas:
+      "statusbar"
+      "canvas"
+      "sidebar";
+  }
+
+  .graph-canvas-area {
+    grid-area: canvas;
+  }
+
+  .right-sidebar {
+    grid-area: sidebar;
+    width: 100%;
+    min-width: unset;
+    border-top: 1px solid var(--border-subtle);
+    border-left: none;
+    flex-direction: row;
+    height: 300px;
+  }
+
+  .sidebar-tabs {
+    flex-direction: column !important;
+    width: 52px;
+    border-right: 1px solid var(--border-subtle);
+    border-bottom: none !important;
+    padding: 8px 4px !important;
+  }
+
+  .sidebar-tab {
+    flex-direction: column;
+    padding: 8px 4px !important;
+    gap: 2px;
+    font-size: 9px !important;
+  }
+
+  .sidebar-tab span:first-of-type {
+    display: none; /* hide icon label on mobile, show only icon */
+  }
+
+  .task-input-bar {
+    max-width: 260px;
+  }
+
+  .status-bar__stats {
+    display: none;
+  }
+}
+
+/* Mobile < 768px — minimal status bar, full-screen graph */
+@media (max-width: 767px) {
+  .app-shell {
+    grid-template-rows: 48px 1fr 260px;
+  }
+
+  .status-bar {
+    overflow-x: auto;
+    padding: 0 8px;
+    gap: 4px;
+  }
+
+  .task-input-bar {
+    max-width: 160px;
+  }
+
+  .task-input {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .status-bar__logo span {
+    font-size: 13px;
+  }
+
+  .btn-primary {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .right-sidebar {
+    height: 260px;
+  }
+
+  /* On mobile, suppress right sidebar tabs row from wrapping */
+  .sidebar-tabs {
+    overflow-x: auto;
+    flex-direction: row !important;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle) !important;
+  }
+
+  /* Hide minimap on mobile */
+  .react-flow__minimap {
+    display: none !important;
+  }
+
+  /* Simplify agent cards on mobile */
+  .agent-card {
+    padding: 8px 10px;
+  }
+
+  .agent-stats {
+    gap: 4px;
+  }
+}
+
+/* Landing page responsive adjustments */
+@media (max-width: 680px) {
+  /* 2-col agent grid → 2-col still OK, 3-col feature → 1-col */
+  section [style*="grid-template-columns: repeat(2, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  section [style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  section [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+

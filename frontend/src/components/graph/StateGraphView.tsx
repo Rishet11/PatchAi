@@ -19,8 +19,10 @@ import { usePatchAIStore } from '@/store/patchai';
 import { nodeTypes } from './AgentNode';
 import { getLayoutedElements } from '@/lib/graph-layout';
 import { ContextMenu } from './ContextMenu';
+import GraphSearchBar from './GraphSearchBar';
 import { GraphNode } from '@/lib/types';
 import { AGENT_CONFIG } from '@/lib/constants';
+import { Network } from 'lucide-react';
 
 function GraphCanvas() {
   const storeNodes = usePatchAIStore(s => s.nodes);
@@ -34,6 +36,7 @@ function GraphCanvas() {
   const addNotification = usePatchAIStore(s => s.addNotification);
   const addAuditEntry = usePatchAIStore(s => s.addAuditEntry);
   const updateStats = usePatchAIStore(s => s.updateStats);
+  const graphSearchQuery = usePatchAIStore(s => s.graphSearchQuery);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -50,13 +53,29 @@ function GraphCanvas() {
       return;
     }
 
-    const rfNodes: Node[] = graphNodes.map(n => ({
-      id: n.id,
-      type: 'agentNode',
-      position: { x: 0, y: 0 },
-      data: { ...n },
-      selected: n.id === selectedNodeId,
-    }));
+    const q = graphSearchQuery.toLowerCase().trim();
+
+    const rfNodes: Node[] = graphNodes.map(n => {
+      const matches = !q ||
+        n.title.toLowerCase().includes(q) ||
+        n.agent.toLowerCase().includes(q) ||
+        n.artifactType.toLowerCase().includes(q) ||
+        n.artifact.toLowerCase().includes(q) ||
+        n.branchId.toLowerCase().includes(q);
+
+      return {
+        id: n.id,
+        type: 'agentNode',
+        position: { x: 0, y: 0 },
+        data: { ...n },
+        selected: n.id === selectedNodeId,
+        style: {
+          opacity: q ? (matches ? 1 : 0.12) : 1,
+          transition: 'opacity 0.2s ease',
+          pointerEvents: (q && !matches) ? 'none' as const : 'all' as const,
+        },
+      };
+    });
 
     const rfEdges: Edge[] = storeEdges.map(e => ({
       id: e.id,
@@ -78,7 +97,7 @@ function GraphCanvas() {
     const { nodes: lNodes, edges: lEdges } = getLayoutedElements(rfNodes, rfEdges, 'TB');
     setNodes(lNodes);
     setEdges(lEdges);
-  }, [storeNodes, storeEdges, selectedNodeId]);
+  }, [storeNodes, storeEdges, selectedNodeId, graphSearchQuery]);
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     selectNode(node.id);
@@ -121,7 +140,7 @@ function GraphCanvas() {
       policyCheck: 'passed',
       timestamp: Date.now(),
     });
-    addNotification({ type: 'success', title: '✨ Branch Revived', message: `Node revived successfully. Branch is active again.` });
+    addNotification({ type: 'success', title: 'Branch Revived', message: `Node revived successfully. Branch is active again.` });
     setContextMenu(null);
   }, [reviveNode, addAuditEntry, addNotification]);
 
@@ -162,12 +181,52 @@ function GraphCanvas() {
       policyCheck: 'bypassed',
       timestamp: Date.now(),
     });
-    addNotification({ type: 'success', title: '🌿 Human Branch Created', message: 'New execution branch created from your intervention.' });
+    addNotification({ type: 'success', title: 'Branch Created', message: 'New execution branch created from your intervention.' });
+    setContextMenu(null);
+  }, [storeNodes, addNode, addEdge, addAuditEntry, addNotification]);
+
+  const handleInject = useCallback((nodeId: string) => {
+    const sourceNode = storeNodes[nodeId];
+    if (!sourceNode) return;
+    const injectId = `node-human-${Date.now()}`;
+    // Injected node is a sibling: same parentId as source, same depth
+    addNode({
+      id: injectId,
+      parentId: sourceNode.parentId,
+      agent: 'human',
+      status: 'active',
+      artifactType: 'decision',
+      title: 'Injected Human Directive',
+      artifact: '# Injected Directive\n\nA human operator has injected a new node as a sibling of the selected node.\n\nThis represents an alternative path or corrective instruction at this point in execution.',
+      contextDelta: `Human injected sibling node alongside ${nodeId}`,
+      humanOverride: true,
+      evaluatorFlag: false,
+      timestamp: Date.now(),
+      depth: sourceNode.depth,
+      branchId: sourceNode.branchId,
+      metadata: { humanOverride: true, injectedFrom: nodeId },
+    });
+    // Connect parent → injected (if parent exists)
+    if (sourceNode.parentId) {
+      addEdge({ id: `e-${sourceNode.parentId}-${injectId}`, source: sourceNode.parentId, target: injectId, type: 'human', animated: true });
+    }
+    addAuditEntry({
+      nodeId: injectId,
+      operation: 'INJECT',
+      actor: 'human',
+      success: true,
+      details: `Human injected sibling node alongside ${nodeId}`,
+      policyCheck: 'bypassed',
+      timestamp: Date.now(),
+    });
+    addNotification({ type: 'info', title: 'Node Injected', message: 'New sibling node injected into the execution graph.' });
     setContextMenu(null);
   }, [storeNodes, addNode, addEdge, addAuditEntry, addNotification]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {/* Floating search bar */}
+      <GraphSearchBar />
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -214,10 +273,12 @@ function GraphCanvas() {
       {/* Empty State */}
       {Object.keys(storeNodes).length === 0 && (
         <div className="empty-state" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-          <div className="empty-state__icon">🕸️</div>
+          <div className="empty-state__icon" style={{ display: 'flex', justifyContent: 'center', opacity: 0.25 }}>
+            <Network size={48} strokeWidth={1} />
+          </div>
           <div className="empty-state__title">No execution in progress</div>
           <div className="empty-state__description">
-            Enter a task and click "▶ Start Demo" to watch multi-agent orchestration in real time
+            Enter a task and click "Start Demo" to watch multi-agent orchestration in real time
           </div>
         </div>
       )}
@@ -232,6 +293,7 @@ function GraphCanvas() {
           onPrune={handlePrune}
           onRevive={handleRevive}
           onBranch={handleBranchFrom}
+          onInject={handleInject}
           onInspect={() => { selectNode(contextMenu.nodeId); setContextMenu(null); }}
           onClose={() => setContextMenu(null)}
         />

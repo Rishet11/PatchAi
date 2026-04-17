@@ -4,7 +4,7 @@
 > 
 > *Built for HackDUCS Hackathon — Sankalan 2026, Dept. of Computer Science, University of Delhi*
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-frontend--two--jet--32.vercel.app-6366f1?style=for-the-badge)](https://frontend-two-jet-32.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-patch--ai.vercel.app-6366f1?style=for-the-badge)](https://patch-ai.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 ---
@@ -46,7 +46,7 @@ Patch.AI fills this gap with **five integrated views**:
 
 ## 🚀 Live Demo
 
-**[→ Open Patch.AI Dashboard](https://frontend-two-jet-32.vercel.app)**
+**[→ Open Patch.AI Dashboard](https://patch-ai.vercel.app)**
 
 Click **"▶ Start Demo"** in the top bar to watch a complete multi-agent coding workflow unfold in real-time.
 
@@ -158,17 +158,7 @@ patch-ai/
 
 The **State Graph Owner (SGO)** is a deterministic, non-intelligent policy enforcement component — every state change goes through it, and every decision is logged. This design provides a clean, auditable governance layer.
 
----
 
-## 🏆 Hackathon
-
-This project was built for **HackDUCS — Sankalan 2026**, organized by the Department of Computer Science, University of Delhi.
-
-- **Domain**: AI/ML + Open Innovation
-- **Team**: Patch.AI
-- **Built After**: April 15, 2026 ✅
-
----
 
 ## 📄 License
 

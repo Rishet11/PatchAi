@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Patch.AI — Live Multi-Agent Orchestration Control Plane',
   description:
-    'The first platform that treats multi-agent execution history as a live, mutable state graph. See, control, and reshape AI systems in real-time. Built for HackDUCS 2026.',
+    'The first platform that treats multi-agent execution history as a live, mutable state graph. See, control, and reshape AI systems in real-time.',
   keywords: ['AI orchestration', 'multi-agent systems', 'LangGraph', 'HITL', 'AI control plane'],
   authors: [{ name: 'Patch.AI Team' }],
   openGraph: {

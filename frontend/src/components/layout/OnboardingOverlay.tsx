@@ -33,28 +33,28 @@ export default function OnboardingOverlay() {
         {/* Features */}
         <div className="onboarding-features">
           <div className="onboarding-feature">
-            <span className="onboarding-feature__icon">🕸️</span>
+            <span className="onboarding-feature__icon">-</span>
             <div className="onboarding-feature__text">
               <strong>Live State Graph</strong>
               The entire execution history as a real-time, mutable directed graph
             </div>
           </div>
           <div className="onboarding-feature">
-            <span className="onboarding-feature__icon">⚡</span>
+            <span className="onboarding-feature__icon">-</span>
             <div className="onboarding-feature__text">
               <strong>Any-Node, Any-Time Intervention</strong>
               Not checkpoints — surgical intervention on any node, live
             </div>
           </div>
           <div className="onboarding-feature">
-            <span className="onboarding-feature__icon">📜</span>
+            <span className="onboarding-feature__icon">-</span>
             <div className="onboarding-feature__text">
               <strong>Mutable Workflow Policy</strong>
               Governance rules that evolve with the task, with full audit trail
             </div>
           </div>
           <div className="onboarding-feature">
-            <span className="onboarding-feature__icon">⚖️</span>
+            <span className="onboarding-feature__icon">-</span>
             <div className="onboarding-feature__text">
               <strong>Evaluator System</strong>
               Heuristic quality monitoring — human retains override authority
@@ -64,11 +64,11 @@ export default function OnboardingOverlay() {
 
         {/* CTA */}
         <button
-          className="btn btn-demo"
-          style={{ width: '100%', padding: '12px', fontSize: 15, justifyContent: 'center' }}
+          className="btn btn-primary"
+          style={{ width: '100%', padding: '12px', fontSize: 13, justifyContent: 'center' }}
           onClick={() => setShowOnboarding(false)}
         >
-          Launch Dashboard →
+          Launch Dashboard
         </button>
         <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 12 }}>
           Click "▶ Start Demo" in the top bar to watch multi-agent orchestration in real-time

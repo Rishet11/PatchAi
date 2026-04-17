@@ -139,9 +139,9 @@ export default function AgentWindowPanel() {
 
       {/* Evaluator status */}
       <div style={{
-        background: 'rgba(168, 85, 247, 0.08)',
-        border: '1px solid rgba(168, 85, 247, 0.2)',
-        borderRadius: 10,
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border-default)',
+        borderRadius: 6,
         padding: 12,
         marginTop: 4,
       }}>
@@ -149,9 +149,9 @@ export default function AgentWindowPanel() {
           <span style={{ fontSize: 16 }}>{AGENT_CONFIG.evaluator.icon}</span>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>Evaluator</div>
-            <div style={{ fontSize: 10, color: 'var(--accent-violet)', fontWeight: 600 }}>Heuristic Engine</div>
+            <div style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 600 }}>Heuristic Engine</div>
           </div>
-          <span className="agent-status-badge" style={{ marginLeft: 'auto', background: 'rgba(168, 85, 247, 0.15)', color: 'var(--accent-violet)' }}>
+          <span className="agent-status-badge" style={{ marginLeft: 'auto', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
             Monitoring
           </span>
         </div>

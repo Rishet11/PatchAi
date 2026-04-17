@@ -239,24 +239,25 @@ body {
 .btn-primary {
   background: var(--accent-indigo);
   color: white;
-  box-shadow: var(--glow-indigo);
+  box-shadow: none;
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--accent-indigo-light);
-  box-shadow: 0 0 24px rgba(99, 102, 241, 0.5);
-  transform: translateY(-1px);
+  box-shadow: none;
+  transform: translateY(0);
 }
 
 .btn-demo {
-  background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+  background: var(--accent-indigo);
   color: white;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  box-shadow: none;
   font-size: 12px;
   padding: 6px 16px;
 }
 .btn-demo:hover:not(:disabled) {
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
-  transform: translateY(-1px);
+  background: var(--accent-indigo-light);
+  box-shadow: none;
+  transform: translateY(0);
 }
 
 .btn-ghost {
@@ -409,13 +410,13 @@ body {
 
 .rf-node:hover {
   border-color: var(--border-strong);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 
 .rf-node.selected {
   border-color: var(--accent-indigo);
-  box-shadow: var(--glow-indigo);
+  box-shadow: var(--shadow-md);
 }
 
 .rf-node.pruned {
@@ -425,7 +426,7 @@ body {
 
 .rf-node.human-override {
   border-color: var(--accent-cyan);
-  box-shadow: var(--glow-cyan);
+  box-shadow: none;
 }
 
 .rf-node__header {
@@ -585,7 +586,7 @@ body {
 }
 
 .agent-card:hover { border-color: var(--border-default); background: var(--bg-elevated); }
-.agent-card.active { border-color: var(--border-strong); box-shadow: var(--glow-indigo); }
+.agent-card.active { border-color: var(--border-strong); box-shadow: none; }
 
 .agent-card__header {
   display: flex;

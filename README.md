@@ -1,113 +1,107 @@
 # Patch.AI
 
-> **Real-Time Multi-Agent Orchestration Control Plane**
-> 
-> *Built for HackDUCS Hackathon — Sankalan 2026, Dept. of Computer Science, University of Delhi*
+> **An execution state graph and control plane for multi-agent workflows.**
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-patch--ai.vercel.app-6366f1?style=for-the-badge)](https://patch-ai.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 ---
 
-## 🧠 What is Patch.AI?
+## Motivation
 
-**Patch.AI is the first platform that treats a multi-agent AI system's execution history as a live, mutable state graph** — a first-class artifact that the human operator can inspect, edit, branch, prune, and reshape at any node, at any time, during live execution.
+Patch.AI treats a multi-agent system's execution history as a mutable state graph. It addresses a core observability issue in current agent orchestration: operators lack visibility into autonomous processes and cannot directly modify execution traces at runtime without implementing rigid checkpoints or breakpoints.
 
-### The Problem
+### Problem Statement
 
-Today, when you run multiple AI agents together (one writes code, another reviews, another tests), you face a fundamental choice:
+When operating multi-agent systems, developers typically encounter two structural limitations:
 
-| Option | Tools | Problem |
-|--------|-------|---------|
-| **Pre-compile graphs** | LangGraph, CrewAI | Can't modify during live execution |
-| **Let agents decide** | OpenAI Agents SDK, AutoGen | Zero visibility or control |
+| Paradigm | Tools | Limitation |
+|----------|-------|------------|
+| **Pre-compiled graphs** | LangGraph, CrewAI | Workflows are static; unable to mutate execution branches dynamically. |
+| **Autonomous execution** | OpenAI Agents SDK, AutoGen | Lack of granular operational visibility constraints real-time intervention. |
 
-Neither option lets you treat the **execution trace itself as editable, living state**.
+Neither approach exposes the execution trace as an editable state object.
 
-### The Solution
+### Interface Overview
 
-Patch.AI fills this gap with **five integrated views**:
+Patch.AI implements five core views to solve this:
 
-1. 🕸️ **Live State Graph** — Real-time directed graph of the entire execution history
-2. 🔍 **Node Detail Panel** — Inspect any node's artifact, context delta, and audit log
-3. 🤖 **Agent Window** — Monitor all agents, chat with them directly, force stop/restart
-4. 📜 **Workflow Policy Window** — Live governance rules with toggle controls and evolution history
-5. 📋 **Audit Log** — Immutable, timestamped record of every operation with policy check results
+1. **State Graph Viewer**: Directed acyclic graph visualization of the execution history.
+2. **Node Inspector**: Interface to inspect output artifacts, state context deltas, and audit logs per node.
+3. **Agent Manager**: Overview of agent statuses, process tracking, and interrupt controls.
+4. **Policy Configuration**: Runtime toggle controls for workflow governance and intervention heuristics.
+5. **Audit Trail**: Immutable record of all graph operations and policy validations.
 
-### Key Differentiators
+### Capabilities
 
-- **Any-node, any-time HITL**: Not breakpoints — surgical intervention anywhere, live
-- **Mutable workflow policy**: Governance rules that evolve at runtime with full audit trail
-- **Evaluator-driven pruning**: AI evaluator proposes branch culling; human retains override authority
-- **Branch revival**: Revive any pruned branch at any time — a primitive that exists nowhere else
-- **Incremental context graph**: Each node stores only a delta, enabling efficient retrieval and perfect auditability
-
----
-
-## 🚀 Live Demo
-
-**[→ Open Patch.AI Dashboard](https://patch-ai.vercel.app)**
-
-Click **"▶ Start Demo"** in the top bar to watch a complete multi-agent coding workflow unfold in real-time.
-
-**Demo Scenario**: "Build a REST API for Task Management"
-- 🧠 Planner → produces API architecture
-- 💻 Coder → implements FastAPI endpoints (v1 → v2)
-- 🔍 Reviewer → reviews code, opens parallel branch
-- ⚖️ Evaluator → proposes pruning the stalling branch
-- 🧪 Tester → runs tests, finds failures, fixes them
-- **You can intervene at any point**: prune, revive, branch, edit
+- **Arbitrary Intervention**: Operators can prune, revive, or branch execution from any node during runtime.
+- **Dynamic Governance**: Workflow policies can be mutated mid-execution with corresponding audit logging.
+- **Heuristic Pruning**: The evaluation layer flags stalling branches for culling, maintaining operator override precedence.
+- **Delta Context Tracking**: Graph nodes store incremental context deltas rather than full state, optimizing retrieval.
 
 ---
 
-## 🛠 Tech Stack
+## Live Application
 
-### Frontend
-| Technology | Purpose |
+**[→ Access deployment](https://patch-ai.vercel.app)**
+
+Click "Start Demo" in the navigation bar to output a simulated multi-agent execution trace. 
+
+**Default Scenario**: Building an API
+- Planner agent produces architectural specification.
+- Coder agent implements endpoint logic.
+- Reviewer agent flags issues and initiates a parallel execution branch.
+- Evaluator heuristic flags a stalling branch for manual pruning.
+- Tester agent executes the validation suite.
+
+---
+
+## Technical Stack
+
+### Client
+| Dependency | Implementation |
 |-----------|---------|
-| **Next.js 15** (App Router) | React framework |
-| **React Flow** (`@xyflow/react`) | Interactive graph visualization |
-| **Zustand** | State management |
-| **Dagre** | Auto-layout for DAG graphs |
-| **Framer Motion** | Animations |
-| **Inter + JetBrains Mono** | Typography |
+| **Next.js 15** | Application routing |
+| **@xyflow/react** | Graph visualization wrapper |
+| **Zustand** | Global state management |
+| **Dagre** | Directed graph auto-layout algorithms |
 
-### Backend
-| Technology | Purpose |
+### Server
+| Dependency | Implementation |
 |-----------|---------|
-| **FastAPI** | REST API server |
-| **Socket.io** (python-socketio) | Real-time WebSocket events |
-| **SQLAlchemy + SQLite** | State persistence |
-| **Pydantic** | Data validation |
-| **Uvicorn** | ASGI server |
+| **FastAPI** | REST controllers |
+| **python-socketio** | WebSocket event handling |
+| **SQLAlchemy** | Database ORM |
+| **SQLite** | State persistence |
+| **Pydantic** | Schema validation |
 
 ---
 
-## 🏃‍♂️ Running Locally
+## Local Development
 
-### Prerequisites
-- Node.js 18+ (`node --version`)
-- Python 3.9+ (`python3 --version`)
+### Requirements
+- Node.js >= 18.0
+- Python >= 3.9
 
-### Frontend Setup
+### Client Setup
 ```bash
 cd frontend
 npm install
 npm run dev
-# → http://localhost:3000
+# Active on port 3000
 ```
 
-### Backend Setup
+### Server Setup
 ```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 python main.py
-# → http://localhost:8000
+# Active on port 8000
 ```
 
-### Environment Variables (optional)
+### Configuration
 ```env
 # frontend/.env.local
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
@@ -115,51 +109,26 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 
 ---
 
-## 📁 Project Structure
+## System Architecture
 
-```
-patch-ai/
-├── frontend/                  # Next.js app
-│   └── src/
-│       ├── app/               # App router pages + global CSS
-│       ├── components/
-│       │   ├── graph/         # React Flow graph + custom nodes
-│       │   ├── panels/        # Node, Agent, Policy, Audit panels
-│       │   └── layout/        # StatusBar, Sidebar, Onboarding
-│       ├── store/             # Zustand global state store
-│       └── lib/               # Types, constants, simulation engine
-│
-├── backend/                   # FastAPI server
-│   ├── main.py                # API endpoints + Socket.io server
-│   └── requirements.txt
-│
-└── README.md
-```
-
----
-
-## 🎯 Architecture
-
-```
+```text
 ┌─────────────────────────────────────────────────────┐
-│                    FRONTEND                          │
-│  Live State Graph │ Node Panel │ Agent Win │ Policy  │
-│          Zustand State Store (real-time)             │
+│                    CLIENT                           │
+│  Graph View │ Node Inspector │ Agent Map │ Policy │
+│                 Zustand Store                       │
 └────────────────────┬────────────────────────────────┘
-                     │ REST + WebSocket
+                     │ HTTP + WSS
 ┌────────────────────┴────────────────────────────────┐
-│                    BACKEND                           │
-│  State Graph Owner (SGO) — Policy Enforcement        │
-│  Agent Simulator — Scripted demo execution           │
-│  Heuristic Evaluator — Branch quality monitoring     │
-│  SQLite — Audit log + state persistence              │
+│                    SERVER                           │
+│  State Graph Owner (SGO) — Policy Enforcement       │
+│  Task Simulator — Demo execution handler            │
+│  Heuristic Evaluator — Quality metric thresholding  │
+│  SQLite Db — Persistence layer                      │
 └─────────────────────────────────────────────────────┘
 ```
 
-The **State Graph Owner (SGO)** is a deterministic, non-intelligent policy enforcement component — every state change goes through it, and every decision is logged. This design provides a clean, auditable governance layer.
+The **State Graph Owner (SGO)** acts as the definitive policy enforcer. All state mutations are validated against the current SGO ruleset and written to the audit log prior to execution.
 
-
-
-## 📄 License
+## License
 
 MIT License — see [LICENSE](LICENSE)

@@ -2,16 +2,20 @@
 
 import React, { useState } from 'react';
 import { usePatchAIStore } from '@/store/patchai';
+import {
+  ArrowLeftRight, CheckCircle2, Lock, Ban,
+  Scissors, Sprout, BellOff, Scale, Plus, Clock
+} from 'lucide-react';
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  transition: '🔀',
-  approval: '✅',
-  permission: '🔐',
-  constraint: '⛔',
+const TYPE_ICONS: Record<string, React.ElementType> = {
+  transition: ArrowLeftRight,
+  approval:   CheckCircle2,
+  permission: Lock,
+  constraint: Ban,
 };
 
 export default function PolicyWindowPanel() {
@@ -116,8 +120,8 @@ export default function PolicyWindowPanel() {
           <>
             {policy.map(rule => (
               <div key={rule.id} className={`policy-rule${rule.enabled ? '' : ' disabled'}`}>
-                <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>
-                  {TYPE_ICONS[rule.type] || '📋'}
+                <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center' }}>
+                  {(() => { const Icon = TYPE_ICONS[rule.type] || Ban; return <Icon size={14} strokeWidth={1.5} color="var(--text-tertiary)" />; })()}
                 </span>
                 <div style={{ flex: 1 }}>
                   <div className="policy-rule__text">{rule.text}</div>
@@ -135,7 +139,15 @@ export default function PolicyWindowPanel() {
             ))}
 
             {/* Add Rule */}
-            {showAddRule ? (
+            {!showAddRule ? (
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowAddRule(true)}
+                style={{ width: '100%', marginTop: 8, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 5 }}
+              >
+                <Plus size={13} /> Add Rule
+              </button>
+            ) : (
               <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-default)', borderRadius: 10, padding: 12, marginTop: 8 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>
                   Add Policy Rule (Natural Language)
@@ -155,14 +167,6 @@ export default function PolicyWindowPanel() {
                   <button className="btn btn-ghost btn-sm" onClick={() => setShowAddRule(false)}>Cancel</button>
                 </div>
               </div>
-            ) : (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setShowAddRule(true)}
-                style={{ width: '100%', marginTop: 8, justifyContent: 'center' }}
-              >
-                + Add Rule
-              </button>
             )}
           </>
         )}
@@ -172,7 +176,9 @@ export default function PolicyWindowPanel() {
           <>
             {evaluatorProposals.length === 0 ? (
               <div className="empty-state" style={{ height: 160 }}>
-                <div className="empty-state__icon">⚖️</div>
+                <div className="empty-state__icon" style={{ display: 'flex', justifyContent: 'center', opacity: 0.3 }}>
+                  <Scale size={32} strokeWidth={1.5} />
+                </div>
                 <div className="empty-state__title">No proposals</div>
                 <div className="empty-state__description">Evaluator has no pending branch quality proposals</div>
               </div>
@@ -182,9 +188,9 @@ export default function PolicyWindowPanel() {
                   style={{ opacity: proposal.status === 'pending' ? 1 : 0.5 }}
                 >
                   <div className="evaluator-proposal__header">
-                    <span style={{ fontSize: 14 }}>⚖️</span>
+                    <Scale size={14} color="var(--accent-amber)" strokeWidth={1.5} />
                     <div className="evaluator-proposal__title">
-                      {proposal.type === 'prune' ? '✂️ Prune Proposal' : '⚠️ Warning'}
+                      {proposal.type === 'prune' ? 'Prune Proposal' : 'Warning'}
                     </div>
                     <div className="evaluator-proposal__confidence">
                       {Math.round(proposal.confidence * 100)}% confidence
@@ -201,21 +207,24 @@ export default function PolicyWindowPanel() {
                     <div className="evaluator-proposal__actions">
                       <button
                         className="btn btn-danger btn-sm"
+                        style={{ display: 'flex', alignItems: 'center', gap: 5 }}
                         onClick={() => handleApproveProposal(proposal.id, proposal.targetNodeId)}
                       >
-                        ✂️ Approve Prune
+                        <Scissors size={12} /> Approve Prune
                       </button>
                       <button
                         className="btn btn-success btn-sm"
+                        style={{ display: 'flex', alignItems: 'center', gap: 5 }}
                         onClick={() => handleOverrideProposal(proposal.id, proposal.targetNodeId)}
                       >
-                        ⚡ Override — Keep
+                        <Sprout size={12} /> Override — Keep
                       </button>
                       <button
                         className="btn btn-ghost btn-sm"
+                        style={{ display: 'flex', alignItems: 'center', gap: 5 }}
                         onClick={() => handleSnoozeProposal(proposal.id)}
                       >
-                        💤 Snooze
+                        <BellOff size={12} /> Snooze
                       </button>
                     </div>
                   ) : (
@@ -234,7 +243,9 @@ export default function PolicyWindowPanel() {
           <>
             {policyHistory.length === 0 ? (
               <div className="empty-state" style={{ height: 160 }}>
-                <div className="empty-state__icon">📜</div>
+                <div className="empty-state__icon" style={{ display: 'flex', justifyContent: 'center', opacity: 0.3 }}>
+                  <Clock size={32} strokeWidth={1.5} />
+                </div>
                 <div className="empty-state__title">No policy changes</div>
                 <div className="empty-state__description">Policy evolution history will appear here</div>
               </div>
@@ -242,7 +253,7 @@ export default function PolicyWindowPanel() {
               policyHistory.map(evo => (
                 <div key={evo.id} className="audit-entry" style={{ padding: '8px 0' }}>
                   <div style={{ width: 28, height: 28, borderRadius: 6, background: 'var(--accent-indigo-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                    {evo.action === 'added' ? '➕' : evo.action === 'toggled' ? '🔄' : evo.action === 'modified' ? '✏️' : '🗑️'}
+                  {evo.action === 'added' ? <Plus size={14} /> : evo.action === 'toggled' ? <ArrowLeftRight size={14} /> : evo.action === 'modified' ? <Scissors size={14} /> : <Ban size={14} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>

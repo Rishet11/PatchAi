@@ -3,6 +3,11 @@
 import React, { useState } from 'react';
 import { usePatchAIStore } from '@/store/patchai';
 import { DemoSimulation } from '@/lib/demo-simulation';
+import {
+  Bell, Play, Square, RotateCcw, TreePine, Scissors, User,
+  Scale, CheckCircle, Download, Upload, Timer, Cpu
+} from 'lucide-react';
+import { ExecutionState } from '@/lib/types';
 
 let simInstance: DemoSimulation | null = null;
 
@@ -14,7 +19,7 @@ function UptimeCounter({ startTime }: { startTime: number | null }) {
     return () => clearInterval(id);
   }, [startTime]);
 
-  if (!startTime) return <span>—</span>;
+  if (!startTime) return <span>--:--</span>;
   const elapsed = Math.floor((Date.now() - startTime) / 1000);
   const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
   const s = (elapsed % 60).toString().padStart(2, '0');
@@ -38,6 +43,7 @@ export default function GlobalStatusBar() {
   const stopExecution = usePatchAIStore(s => s.stopExecution);
 
   const [taskInput, setTaskInput] = useState('Build a REST API for a Task Management System');
+  const [importError, setImportError] = useState<string | null>(null);
 
   const handleStartDemo = () => {
     if (isDemoRunning) return;
@@ -57,6 +63,68 @@ export default function GlobalStatusBar() {
     simInstance?.stop();
     resetState();
     setDemoRunning(false);
+  };
+
+  // Export: serialize current state to JSON file download
+  const handleExport = () => {
+    const state = usePatchAIStore.getState();
+    const snapshot: Partial<ExecutionState> = {
+      id: state.id,
+      taskDescription: state.taskDescription,
+      status: state.status,
+      startTime: state.startTime,
+      nodes: state.nodes,
+      edges: state.edges,
+      agents: state.agents,
+      policy: state.policy,
+      policyHistory: state.policyHistory,
+      auditLog: state.auditLog,
+      notifications: state.notifications,
+      evaluatorProposals: state.evaluatorProposals,
+      stats: state.stats,
+    };
+    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `patchai-snapshot-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Import: load JSON file and restore state
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const snapshot = JSON.parse(text) as Partial<ExecutionState>;
+        // Basic shape validation
+        if (!snapshot.nodes || !snapshot.edges) {
+          setImportError('Invalid snapshot: missing nodes or edges');
+          setTimeout(() => setImportError(null), 3000);
+          return;
+        }
+        usePatchAIStore.setState({
+          ...snapshot,
+          showOnboarding: false,
+          isDemoRunning: false,
+          activePanel: 'node',
+          selectedNodeId: null,
+          unreadCount: 0,
+          notificationTrayOpen: false,
+        } as Parameters<typeof usePatchAIStore.setState>[0]);
+        setImportError(null);
+      } catch {
+        setImportError('Failed to parse snapshot JSON');
+        setTimeout(() => setImportError(null), 3000);
+      }
+    };
+    input.click();
   };
 
   return (
@@ -80,16 +148,10 @@ export default function GlobalStatusBar() {
           />
         ) : (
           <div style={{
-            flex: 1,
-            background: 'var(--bg-tertiary)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '6px 12px',
-            fontSize: 12,
-            color: 'var(--text-secondary)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            flex: 1, background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-sm)', padding: '6px 12px', fontSize: 12,
+            color: 'var(--text-secondary)', overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {taskDescription || taskInput}
           </div>
@@ -99,42 +161,40 @@ export default function GlobalStatusBar() {
       {/* Stats */}
       <div className="status-bar__stats">
         <div className="stat-chip">
-          <span>⏱</span>
+          <Timer size={11} />
           <span><UptimeCounter startTime={startTime} /></span>
         </div>
         <div className="stat-chip stat-chip--active">
-          <span>●</span>
+          <Cpu size={11} />
           <span>Nodes</span>
           <span className="stat-chip__value">{stats.totalNodes}</span>
         </div>
         <div className="stat-chip stat-chip--active">
-          <span>🌿</span>
+          <TreePine size={11} />
           <span className="stat-chip__value">{stats.activeBranches}</span>
           <span>Branches</span>
         </div>
         {stats.prunedNodes > 0 && (
           <div className="stat-chip stat-chip--pruned">
-            <span>✂️</span>
+            <Scissors size={11} />
             <span className="stat-chip__value">{stats.prunedNodes}</span>
             <span>Pruned</span>
           </div>
         )}
         {stats.humanInterventions > 0 && (
           <div className="stat-chip stat-chip--human">
-            <span>👤</span>
+            <User size={11} />
             <span className="stat-chip__value">{stats.humanInterventions}</span>
             <span>HITL</span>
           </div>
         )}
         {stats.pendingProposals > 0 && (
           <div className="stat-chip stat-chip--warn">
-            <span>⚖️</span>
+            <Scale size={11} />
             <span className="stat-chip__value">{stats.pendingProposals}</span>
             <span>Pending</span>
           </div>
         )}
-
-        {/* Running indicator */}
         {status === 'running' && (
           <div className="run-indicator">
             <div className="run-dot" />
@@ -143,13 +203,39 @@ export default function GlobalStatusBar() {
         )}
         {status === 'completed' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: 'var(--accent-emerald)' }}>
-            <span>✅</span>
+            <CheckCircle size={13} />
             <span>Complete</span>
           </div>
         )}
       </div>
 
+      {importError && (
+        <div style={{ fontSize: 11, color: 'var(--accent-red)', padding: '0 8px', whiteSpace: 'nowrap' }}>
+          {importError}
+        </div>
+      )}
+
       <div className="status-bar__actions">
+        {/* Export / Import */}
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={handleExport}
+          title="Export snapshot (Ctrl+E)"
+          style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+        >
+          <Download size={13} /> Export
+        </button>
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={handleImport}
+          title="Import snapshot"
+          style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+        >
+          <Upload size={13} /> Import
+        </button>
+
+        <div className="status-bar__divider" />
+
         {/* Notification bell */}
         <div style={{ position: 'relative' }}>
           <button
@@ -157,20 +243,15 @@ export default function GlobalStatusBar() {
             onClick={() => setNotificationTrayOpen(!notificationTrayOpen)}
             title="Notifications"
           >
-            🔔
+            <Bell size={15} />
             {unreadCount > 0 && (
               <span style={{
-                position: 'absolute',
-                top: -4, right: -4,
+                position: 'absolute', top: -4, right: -4,
                 background: 'var(--accent-indigo)',
-                color: 'white',
-                borderRadius: '50%',
+                color: 'white', borderRadius: '50%',
                 width: 16, height: 16,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 9,
-                fontWeight: 800,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 9, fontWeight: 800,
               }}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
@@ -196,9 +277,7 @@ export default function GlobalStatusBar() {
                     >
                       <div className="notification-item__title">{n.title}</div>
                       <div className="notification-item__message">{n.message}</div>
-                      <div className="notification-item__time">
-                        {new Date(n.timestamp).toLocaleTimeString()}
-                      </div>
+                      <div className="notification-item__time">{new Date(n.timestamp).toLocaleTimeString()}</div>
                     </div>
                   ))
                 )}
@@ -210,18 +289,22 @@ export default function GlobalStatusBar() {
         {/* Controls */}
         {(status === 'idle' || status === 'stopped' || status === 'completed') ? (
           <button
-            className="btn btn-demo"
+            className="btn btn-primary"
             onClick={handleStartDemo}
             disabled={isDemoRunning}
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            ▶ Start Demo
+            <Play size={13} /> Start Demo
           </button>
         ) : (
-          <>
-            <button className="btn btn-ghost btn-sm" onClick={handleStop} disabled={!isDemoRunning && status !== 'running'}>
-              ⏹ Stop
-            </button>
-          </>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={handleStop}
+            disabled={!isDemoRunning && status !== 'running'}
+            style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+          >
+            <Square size={12} /> Stop
+          </button>
         )}
 
         <button
@@ -229,7 +312,7 @@ export default function GlobalStatusBar() {
           onClick={handleReset}
           title="Reset execution"
         >
-          🔄
+          <RotateCcw size={14} />
         </button>
       </div>
     </header>

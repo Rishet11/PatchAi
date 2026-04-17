@@ -4,6 +4,7 @@ import React from 'react';
 import { usePatchAIStore } from '@/store/patchai';
 import { AGENT_CONFIG } from '@/lib/constants';
 import { AgentState } from '@/lib/types';
+import { Zap } from 'lucide-react';
 
 function formatTime(ts: number) {
   const diff = Date.now() - ts;
@@ -66,8 +67,8 @@ export default function AgentWindowPanel() {
                 <div className="agent-card__name">{agent.name}</div>
                 <div className="agent-card__role" style={{ color: cfg.color }}>{cfg.name}</div>
               </div>
-              <span className={`agent-status-badge ${STATUS_CLASS[agent.status]}`}>
-                {agent.status === 'working' && '⚡ '}
+        <span className={`agent-status-badge ${STATUS_CLASS[agent.status]}`}>
+                {agent.status === 'working' && <Zap size={10} style={{ display: 'inline', marginRight: 2 }} />}
                 {STATUS_LABELS[agent.status]}
               </span>
             </div>
@@ -118,16 +119,16 @@ export default function AgentWindowPanel() {
               </div>
             </div>
 
-            {/* Working indicator */}
+            {/* Working indicator - dynamic progress based on node count */}
             {agent.status === 'working' && (
               <div style={{ marginTop: 8 }}>
                 <div className="progress-bar">
                   <div
                     className="progress-bar__fill"
                     style={{
-                      width: '60%',
-                      animation: 'progressAnim 1.5s ease-in-out infinite alternate',
-                      background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}88)`,
+                      width: `${Math.min(95, (agent.acceptedProposals / Math.max(agent.totalProposals, 1)) * 100 + 30)}%`,
+                      background: cfg.color,
+                      transition: 'width 0.6s ease',
                     }}
                   />
                 </div>

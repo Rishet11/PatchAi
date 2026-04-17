@@ -4,7 +4,7 @@ import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { GraphNode, NodeStatus } from '@/lib/types';
 import { AGENT_CONFIG, NODE_STATUS_CONFIG, ARTIFACT_ICONS } from '@/lib/constants';
-import { usePatchAIStore } from '@/store/patchai';
+import { AlertTriangle, User } from 'lucide-react';
 
 type AgentNodeData = GraphNode & { [key: string]: unknown };
 
@@ -28,7 +28,6 @@ export const AgentNode = memo(({ data, selected }: NodeProps) => {
   const agentCfg = AGENT_CONFIG[nodeData.agent];
   const artifactIcon = ARTIFACT_ICONS[nodeData.artifactType];
 
-  const isHuman = nodeData.agent === 'human';
   const isPruned = nodeData.status === 'pruned';
 
   return (
@@ -47,11 +46,6 @@ export const AgentNode = memo(({ data, selected }: NodeProps) => {
           : nodeData.humanOverride
             ? 'var(--accent-cyan)'
             : undefined,
-        boxShadow: selected
-          ? `0 0 20px ${agentCfg.glowColor}`
-          : nodeData.humanOverride
-            ? 'var(--glow-cyan)'
-            : undefined,
         opacity: isPruned ? 0.35 : 1,
       }}
     >
@@ -59,17 +53,20 @@ export const AgentNode = memo(({ data, selected }: NodeProps) => {
 
       {/* Human override badge */}
       {nodeData.humanOverride && (
-        <div className="rf-node__human-badge">HUMAN</div>
+        <div className="rf-node__human-badge" style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <User size={8} /> HUMAN
+        </div>
       )}
 
       {/* Evaluator flag */}
       {nodeData.evaluatorFlag && !isPruned && (
-        <div className="rf-node__eval-badge">⚠️ EVAL</div>
+        <div className="rf-node__eval-badge" style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <AlertTriangle size={8} /> EVAL
+        </div>
       )}
 
       {/* Header */}
       <div className="rf-node__header">
-        <span className="rf-node__icon">{agentCfg.icon}</span>
         <span className="rf-node__agent" style={{ color: agentCfg.color }}>
           {agentCfg.name}
         </span>
@@ -87,7 +84,7 @@ export const AgentNode = memo(({ data, selected }: NodeProps) => {
         <StatusDot status={nodeData.status} />
       </div>
 
-      {/* Working shimmer */}
+      {/* Working shimmer bar */}
       {nodeData.status === 'working' && (
         <div style={{
           position: 'absolute',

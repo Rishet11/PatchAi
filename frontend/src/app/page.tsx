@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import GlobalStatusBar from '@/components/layout/GlobalStatusBar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import OnboardingOverlay from '@/components/layout/OnboardingOverlay';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 // Dynamic import to avoid SSR issues with React Flow
 const StateGraphView = dynamic(
@@ -25,6 +26,8 @@ const StateGraphView = dynamic(
 );
 
 export default function HomePage() {
+  useKeyboardShortcuts();
+
   return (
     <div className="app-shell">
       {/* Global Status Bar */}

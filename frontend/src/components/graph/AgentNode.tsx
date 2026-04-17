@@ -105,6 +105,11 @@ export const AgentNode = memo(({ data, selected }: NodeProps) => {
 
 AgentNode.displayName = 'AgentNode';
 
+import { DecisionNode } from './DecisionNode';
+import { ErrorNode } from './ErrorNode';
+
 export const nodeTypes = {
   agentNode: AgentNode,
+  decisionNode: DecisionNode,
+  errorNode: ErrorNode,
 };

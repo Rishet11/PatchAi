@@ -63,9 +63,13 @@ function GraphCanvas() {
         n.artifact.toLowerCase().includes(q) ||
         n.branchId.toLowerCase().includes(q);
 
+      let type = 'agentNode';
+      if (n.artifactType === 'decision') type = 'decisionNode';
+      if (n.status === 'error' || n.artifactType.includes('error')) type = 'errorNode';
+
       return {
         id: n.id,
-        type: 'agentNode',
+        type,
         position: { x: 0, y: 0 },
         data: { ...n },
         selected: n.id === selectedNodeId,

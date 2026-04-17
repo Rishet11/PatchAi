@@ -15,6 +15,7 @@ import {
   PolicyEvolution,
 } from '@/lib/types';
 import { POLICY_RULES_DEFAULT } from '@/lib/constants';
+import { socket } from '@/lib/socket';
 
 interface UIState {
   selectedNodeId: string | null;
@@ -29,6 +30,7 @@ interface UIState {
 }
 
 interface PatchAIStore extends ExecutionState, UIState {
+  setupSocketListeners: () => void;
   // Execution actions
   startExecution: (task: string) => void;
   stopExecution: () => void;
@@ -176,34 +178,49 @@ export const usePatchAIStore = create<PatchAIStore>()(
     ...INITIAL_STATE,
     ...INITIAL_UI,
 
-    startExecution: (task) => set({
-      taskDescription: task,
-      status: 'running',
-      startTime: Date.now(),
-    }),
+    startExecution: (task) => {
+      set({
+        taskDescription: task,
+        status: 'running',
+        startTime: Date.now(),
+      });
+      fetch('http://localhost:8000/execution/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task }),
+      }).catch(() => {}); // ignore if backend offline
+    },
 
     stopExecution: () => set({ status: 'stopped' }),
     pauseExecution: () => set({ status: 'paused' }),
 
-    addNode: (node) => set((state) => {
-      const newNodes = { ...state.nodes, [node.id]: node };
-      const activeNodes = Object.values(newNodes).filter(n => n.status !== 'pruned').length;
-      const prunedNodes = Object.values(newNodes).filter(n => n.status === 'pruned').length;
+    addNode: (node) => {
+      fetch('http://localhost:8000/sync/node', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(node),
+      }).catch(() => {});
       
-      // Find unique branch IDs
-      const branchIds = new Set(Object.values(newNodes).map(n => n.branchId));
-      
-      return {
-        nodes: newNodes,
-        stats: {
-          ...state.stats,
-          totalNodes: Object.keys(newNodes).length,
-          activeNodes,
-          prunedNodes,
-          activeBranches: branchIds.size,
-        },
-      };
-    }),
+      set((state) => {
+        const newNodes = { ...state.nodes, [node.id]: node };
+        const activeNodes = Object.values(newNodes).filter(n => n.status !== 'pruned').length;
+        const prunedNodes = Object.values(newNodes).filter(n => n.status === 'pruned').length;
+        
+        // Find unique branch IDs
+        const branchIds = new Set(Object.values(newNodes).map(n => n.branchId));
+        
+        return {
+          nodes: newNodes,
+          stats: {
+            ...state.stats,
+            totalNodes: Object.keys(newNodes).length,
+            activeNodes,
+            prunedNodes,
+            activeBranches: branchIds.size,
+          },
+        };
+      });
+    },
 
     updateNode: (id, updates) => set((state) => ({
       nodes: {
@@ -250,9 +267,16 @@ export const usePatchAIStore = create<PatchAIStore>()(
       };
     }),
 
-    addEdge: (edge) => set((state) => ({
-      edges: [...state.edges, edge],
-    })),
+    addEdge: (edge) => {
+      fetch('http://localhost:8000/sync/edge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(edge),
+      }).catch(() => {});
+      set((state) => ({
+        edges: [...state.edges, edge],
+      }));
+    },
 
     selectNode: (id) => set({
       selectedNodeId: id,
@@ -382,5 +406,53 @@ export const usePatchAIStore = create<PatchAIStore>()(
       ...INITIAL_UI,
       showOnboarding: false,
     }),
+
+    setupSocketListeners: () => {
+      socket.connect();
+      
+      socket.on('connect', () => {
+        console.log('Connected to backend WebSocket');
+        // Fetch initial full DB state
+        fetch('http://localhost:8000/state')
+          .then(r => r.json())
+          .then(data => {
+            if (data.nodes && Object.keys(data.nodes).length > 0) {
+              set({
+                nodes: data.nodes,
+                edges: data.edges || [],
+                auditLog: data.audit_log || [],
+                policy: data.policy || POLICY_RULES_DEFAULT,
+              });
+            }
+          })
+          .catch(console.error);
+      });
+
+      socket.on('remote_node_updated', (node: GraphNode) => {
+        set((state) => ({
+          nodes: { ...state.nodes, [node.id]: node },
+        }));
+      });
+
+      socket.on('remote_edge_added', (edge: GraphEdge) => {
+        set((state) => {
+          if (state.edges.find(e => e.id === edge.id)) return state;
+          return { edges: [...state.edges, edge] };
+        });
+      });
+
+      socket.on('node_updated', ({ nodeId, operation, audit }) => {
+        // We fetch latest state or just append audit
+        set((state) => ({
+          auditLog: [audit, ...state.auditLog].slice(0, 200)
+        }));
+        // Update the node's local status if it was pruned/revived remotely
+        if (operation === 'PRUNE') {
+          get().updateNode(nodeId, { status: 'pruned' });
+        } else if (operation === 'REVIVE') {
+          get().updateNode(nodeId, { status: 'completed' });
+        }
+      });
+    },
   }))
 );

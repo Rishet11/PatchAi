@@ -1,10 +1,12 @@
 'use client';
 
+import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import GlobalStatusBar from '@/components/layout/GlobalStatusBar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import OnboardingOverlay from '@/components/layout/OnboardingOverlay';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { usePatchAIStore } from '@/store/patchai';
 
 // Dynamic import to avoid SSR issues with React Flow
 const StateGraphView = dynamic(
@@ -27,6 +29,11 @@ const StateGraphView = dynamic(
 
 export default function DashboardPage() {
   useKeyboardShortcuts();
+
+  useEffect(() => {
+    const setupSockets = usePatchAIStore.getState().setupSocketListeners;
+    setupSockets();
+  }, []);
 
   return (
     <div className="app-shell">

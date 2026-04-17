@@ -150,7 +150,7 @@ export const POLICY_RULES_DEFAULT = [
   },
 ];
 
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://patchai.onrender.com';
 
 export const GRAPH_LAYOUT_OPTIONS = {
   rankdir: 'TB',

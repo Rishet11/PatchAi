@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { usePatchAIStore } from '@/store/patchai';
 import { DemoSimulation } from '@/lib/demo-simulation';
+import { ENABLE_LOCAL_DEMO_FALLBACK } from '@/lib/constants';
 import {
   Bell, Play, Square, RotateCcw, TreePine, Scissors, User,
   Scale, CheckCircle, Download, Upload, Timer, Cpu
@@ -36,6 +37,7 @@ export default function GlobalStatusBar() {
   const notificationTrayOpen = usePatchAIStore(s => s.notificationTrayOpen);
   const notifications = usePatchAIStore(s => s.notifications);
 
+  const startExecution = usePatchAIStore(s => s.startExecution);
   const setDemoRunning = usePatchAIStore(s => s.setDemoRunning);
   const resetState = usePatchAIStore(s => s.resetState);
   const setNotificationTrayOpen = usePatchAIStore(s => s.setNotificationTrayOpen);
@@ -45,17 +47,23 @@ export default function GlobalStatusBar() {
   const [taskInput, setTaskInput] = useState('Build a REST API for a Task Management System');
   const [importError, setImportError] = useState<string | null>(null);
 
-  const handleStartDemo = () => {
+  const handleStartDemo = async () => {
     if (isDemoRunning) return;
     resetState();
-    setDemoRunning(true);
-    simInstance = new DemoSimulation();
-    simInstance.run();
+    const started = await startExecution(taskInput.trim() || 'Build a REST API for a Task Management System');
+    if (started) {
+      return;
+    }
+    if (ENABLE_LOCAL_DEMO_FALLBACK) {
+      setDemoRunning(true);
+      simInstance = new DemoSimulation();
+      simInstance.run();
+    }
   };
 
-  const handleStop = () => {
+  const handleStop = async () => {
     simInstance?.stop();
-    stopExecution();
+    await stopExecution();
     setDemoRunning(false);
   };
 

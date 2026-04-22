@@ -29,13 +29,8 @@ function GraphCanvas() {
   const storeEdges = usePatchAIStore(s => s.edges);
   const selectedNodeId = usePatchAIStore(s => s.selectedNodeId);
   const selectNode = usePatchAIStore(s => s.selectNode);
-  const pruneNode = usePatchAIStore(s => s.pruneNode);
-  const reviveNode = usePatchAIStore(s => s.reviveNode);
-  const addNode = usePatchAIStore(s => s.addNode);
-  const addEdge = usePatchAIStore(s => s.addEdge);
+  const operateNode = usePatchAIStore(s => s.operateNode);
   const addNotification = usePatchAIStore(s => s.addNotification);
-  const addAuditEntry = usePatchAIStore(s => s.addAuditEntry);
-  const updateStats = usePatchAIStore(s => s.updateStats);
   const graphSearchQuery = usePatchAIStore(s => s.graphSearchQuery);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -117,115 +112,37 @@ function GraphCanvas() {
     setContextMenu(null);
   }, []);
 
-  const handlePrune = useCallback((nodeId: string) => {
-    pruneNode(nodeId);
-    addAuditEntry({
-      nodeId,
-      operation: 'PRUNE',
-      actor: 'human',
-      success: true,
-      details: `Human pruned node ${nodeId} and its subtree`,
-      policyCheck: 'passed',
-      timestamp: Date.now(),
-    });
-    addNotification({ type: 'info', title: 'Node Pruned', message: `Node ${nodeId.substring(0, 8)} marked inactive. Branch preserved in audit log.` });
-    updateStats({ humanInterventions: usePatchAIStore.getState().stats.humanInterventions + 1 });
-    setContextMenu(null);
-  }, [pruneNode, addAuditEntry, addNotification, updateStats]);
-
-  const handleRevive = useCallback((nodeId: string) => {
-    reviveNode(nodeId);
-    addAuditEntry({
-      nodeId,
-      operation: 'REVIVE',
-      actor: 'human',
-      success: true,
-      details: `Human revived node ${nodeId}`,
-      policyCheck: 'passed',
-      timestamp: Date.now(),
-    });
-    addNotification({ type: 'success', title: 'Branch Revived', message: `Node revived successfully. Branch is active again.` });
-    setContextMenu(null);
-  }, [reviveNode, addAuditEntry, addNotification]);
-
-  const handleBranchFrom = useCallback((nodeId: string) => {
-    const parentNode = storeNodes[nodeId];
-    if (!parentNode) return;
-    const branchNodeId = `node-human-${Date.now()}`;
-    const agentCfg = AGENT_CONFIG['human'];
-    addNode({
-      id: branchNodeId,
-      parentId: nodeId,
-      agent: 'human',
-      status: 'active',
-      artifactType: 'decision',
-      title: 'Human Branch Instruction',
-      artifact: '# Human Override Decision\n\nA human operator has intervened and created a new execution branch from this point.\n\nNew direction: [Awaiting human input]\n\nThis node marks a human_override point in the execution graph.',
-      contextDelta: 'Human operator created branch from this node',
-      humanOverride: true,
-      evaluatorFlag: false,
-      timestamp: Date.now(),
-      depth: parentNode.depth + 1,
-      branchId: `branch-human-${Date.now()}`,
-      metadata: { humanOverride: true },
-    });
-    addEdge({
-      id: `e-${nodeId}-${branchNodeId}`,
-      source: nodeId,
-      target: branchNodeId,
-      type: 'human',
-      animated: true,
-    });
-    addAuditEntry({
-      nodeId: branchNodeId,
-      operation: 'BRANCH',
-      actor: 'human',
-      success: true,
-      details: `Human created new branch from node ${nodeId}`,
-      policyCheck: 'bypassed',
-      timestamp: Date.now(),
-    });
-    addNotification({ type: 'success', title: 'Branch Created', message: 'New execution branch created from your intervention.' });
-    setContextMenu(null);
-  }, [storeNodes, addNode, addEdge, addAuditEntry, addNotification]);
-
-  const handleInject = useCallback((nodeId: string) => {
-    const sourceNode = storeNodes[nodeId];
-    if (!sourceNode) return;
-    const injectId = `node-human-${Date.now()}`;
-    // Injected node is a sibling: same parentId as source, same depth
-    addNode({
-      id: injectId,
-      parentId: sourceNode.parentId,
-      agent: 'human',
-      status: 'active',
-      artifactType: 'decision',
-      title: 'Injected Human Directive',
-      artifact: '# Injected Directive\n\nA human operator has injected a new node as a sibling of the selected node.\n\nThis represents an alternative path or corrective instruction at this point in execution.',
-      contextDelta: `Human injected sibling node alongside ${nodeId}`,
-      humanOverride: true,
-      evaluatorFlag: false,
-      timestamp: Date.now(),
-      depth: sourceNode.depth,
-      branchId: sourceNode.branchId,
-      metadata: { humanOverride: true, injectedFrom: nodeId },
-    });
-    // Connect parent → injected (if parent exists)
-    if (sourceNode.parentId) {
-      addEdge({ id: `e-${sourceNode.parentId}-${injectId}`, source: sourceNode.parentId, target: injectId, type: 'human', animated: true });
+  const handlePrune = useCallback(async (nodeId: string) => {
+    const result = await operateNode(nodeId, 'PRUNE', 'human');
+    if (result.success) {
+      addNotification({ type: 'info', title: 'Node Pruned', message: `Node ${nodeId.substring(0, 8)} marked inactive. Branch preserved in audit log.` });
     }
-    addAuditEntry({
-      nodeId: injectId,
-      operation: 'INJECT',
-      actor: 'human',
-      success: true,
-      details: `Human injected sibling node alongside ${nodeId}`,
-      policyCheck: 'bypassed',
-      timestamp: Date.now(),
-    });
-    addNotification({ type: 'info', title: 'Node Injected', message: 'New sibling node injected into the execution graph.' });
     setContextMenu(null);
-  }, [storeNodes, addNode, addEdge, addAuditEntry, addNotification]);
+  }, [operateNode, addNotification]);
+
+  const handleRevive = useCallback(async (nodeId: string) => {
+    const result = await operateNode(nodeId, 'REVIVE', 'human');
+    if (result.success) {
+      addNotification({ type: 'success', title: 'Branch Revived', message: `Node revived successfully. Branch is active again.` });
+    }
+    setContextMenu(null);
+  }, [operateNode, addNotification]);
+
+  const handleBranchFrom = useCallback(async (nodeId: string) => {
+    const result = await operateNode(nodeId, 'BRANCH', 'human');
+    if (result.success) {
+      addNotification({ type: 'success', title: 'Branch Created', message: 'New execution branch created from your intervention.' });
+    }
+    setContextMenu(null);
+  }, [operateNode, addNotification]);
+
+  const handleInject = useCallback(async (nodeId: string) => {
+    const result = await operateNode(nodeId, 'INJECT', 'human');
+    if (result.success) {
+      addNotification({ type: 'info', title: 'Node Injected', message: 'New sibling node injected into the execution graph.' });
+    }
+    setContextMenu(null);
+  }, [operateNode, addNotification]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>

@@ -30,12 +30,8 @@ function getMonacoLanguage(node: GraphNode): string {
 export default function NodeDetailPanel() {
   const selectedNodeId = usePatchAIStore(s => s.selectedNodeId);
   const nodes = usePatchAIStore(s => s.nodes);
-  const pruneNode = usePatchAIStore(s => s.pruneNode);
-  const reviveNode = usePatchAIStore(s => s.reviveNode);
+  const operateNode = usePatchAIStore(s => s.operateNode);
   const updateNode = usePatchAIStore(s => s.updateNode);
-  const addNode = usePatchAIStore(s => s.addNode);
-  const addEdge = usePatchAIStore(s => s.addEdge);
-  const addAuditEntry = usePatchAIStore(s => s.addAuditEntry);
   const addNotification = usePatchAIStore(s => s.addNotification);
   const auditLog = usePatchAIStore(s => s.auditLog);
 
@@ -51,27 +47,22 @@ export default function NodeDetailPanel() {
     setIsEditing(true);
   }, [node]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!node) return;
     const originalLen = node.artifact.length;
     const newLen = editedArtifact.length;
-    updateNode(node.id, { artifact: editedArtifact, humanOverride: true });
-    addAuditEntry({
-      nodeId: node.id,
-      operation: 'EDIT_ARTIFACT',
-      actor: 'human',
-      success: true,
-      details: `Human edited artifact — ${originalLen > newLen ? `removed ${originalLen - newLen}` : `added ${newLen - originalLen}`} chars`,
-      policyCheck: 'bypassed',
-      timestamp: Date.now(),
-    });
-    addNotification({
-      type: 'info',
-      title: 'Artifact Modified',
-      message: 'Downstream nodes may need re-evaluation. Human override flag set.',
-    });
+    const result = await operateNode(node.id, 'EDIT_ARTIFACT', 'human', { artifact: editedArtifact });
+    if (result.success) {
+      addNotification({
+        type: 'info',
+        title: 'Artifact Modified',
+        message: `Artifact updated (${originalLen > newLen ? `removed ${originalLen - newLen}` : `added ${newLen - originalLen}`} chars).`,
+      });
+    } else {
+      updateNode(node.id, { artifact: editedArtifact, humanOverride: true });
+    }
     setIsEditing(false);
-  }, [node, editedArtifact, updateNode, addAuditEntry, addNotification]);
+  }, [node, editedArtifact, operateNode, addNotification, updateNode]);
 
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
 
@@ -83,43 +74,29 @@ export default function NodeDetailPanel() {
     });
   }, [node]);
 
-  const handlePrune = useCallback(() => {
+  const handlePrune = useCallback(async () => {
     if (!node) return;
-    pruneNode(node.id);
-    addAuditEntry({ nodeId: node.id, operation: 'PRUNE', actor: 'human', success: true, details: 'Human operator pruned node', policyCheck: 'passed', timestamp: Date.now() });
-    addNotification({ type: 'info', title: 'Node Pruned', message: `Branch pruned at ${node.title}` });
-  }, [node, pruneNode, addAuditEntry, addNotification]);
+    const result = await operateNode(node.id, 'PRUNE', 'human');
+    if (result.success) {
+      addNotification({ type: 'info', title: 'Node Pruned', message: `Branch pruned at ${node.title}` });
+    }
+  }, [node, operateNode, addNotification]);
 
-  const handleRevive = useCallback(() => {
+  const handleRevive = useCallback(async () => {
     if (!node) return;
-    reviveNode(node.id);
-    addAuditEntry({ nodeId: node.id, operation: 'REVIVE', actor: 'human', success: true, details: 'Human operator revived node', policyCheck: 'passed', timestamp: Date.now() });
-    addNotification({ type: 'success', title: 'Node Revived', message: `Branch revived at ${node.title}` });
-  }, [node, reviveNode, addAuditEntry, addNotification]);
+    const result = await operateNode(node.id, 'REVIVE', 'human');
+    if (result.success) {
+      addNotification({ type: 'success', title: 'Node Revived', message: `Branch revived at ${node.title}` });
+    }
+  }, [node, operateNode, addNotification]);
 
-  const handleBranch = useCallback(() => {
+  const handleBranch = useCallback(async () => {
     if (!node) return;
-    const branchId = `node-human-${Date.now()}`;
-    addNode({
-      id: branchId,
-      parentId: node.id,
-      agent: 'human',
-      status: 'active',
-      artifactType: 'decision',
-      title: 'Human Override Decision',
-      artifact: '# Human Override\n\nOperator created a new execution branch from this point.\n\nThis node represents a human_override intervention in the live execution graph.',
-      contextDelta: 'Human operator created branch from panel',
-      humanOverride: true,
-      evaluatorFlag: false,
-      timestamp: Date.now(),
-      depth: node.depth + 1,
-      branchId: `branch-human-${Date.now()}`,
-      metadata: { humanOverride: true },
-    });
-    addEdge({ id: `e-${node.id}-${branchId}`, source: node.id, target: branchId, type: 'human', animated: true });
-    addAuditEntry({ nodeId: branchId, operation: 'BRANCH', actor: 'human', success: true, details: 'Human branched from panel', policyCheck: 'bypassed', timestamp: Date.now() });
-    addNotification({ type: 'success', title: 'Branch Created', message: 'New human override branch created.' });
-  }, [node, addNode, addEdge, addAuditEntry, addNotification]);
+    const result = await operateNode(node.id, 'BRANCH', 'human');
+    if (result.success) {
+      addNotification({ type: 'success', title: 'Branch Created', message: 'New human override branch created.' });
+    }
+  }, [node, operateNode, addNotification]);
 
   if (!node) {
     return (

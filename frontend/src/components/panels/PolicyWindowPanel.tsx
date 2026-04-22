@@ -25,11 +25,7 @@ export default function PolicyWindowPanel() {
   const togglePolicy = usePatchAIStore(s => s.togglePolicy);
   const addPolicy = usePatchAIStore(s => s.addPolicy);
   const resolveProposal = usePatchAIStore(s => s.resolveProposal);
-  const pruneNode = usePatchAIStore(s => s.pruneNode);
-  const reviveNode = usePatchAIStore(s => s.reviveNode);
   const addNotification = usePatchAIStore(s => s.addNotification);
-  const addAuditEntry = usePatchAIStore(s => s.addAuditEntry);
-  const updateStats = usePatchAIStore(s => s.updateStats);
 
   const [activeTab, setActiveTab] = useState<'rules' | 'history' | 'evaluator'>('rules');
   const [newRuleText, setNewRuleText] = useState('');
@@ -37,32 +33,26 @@ export default function PolicyWindowPanel() {
 
   const pendingProposals = evaluatorProposals.filter(p => p.status === 'pending');
 
-  const handleAddRule = () => {
+  const handleAddRule = async () => {
     if (!newRuleText.trim()) return;
-    addPolicy(newRuleText.trim());
+    await addPolicy(newRuleText.trim());
     setNewRuleText('');
     setShowAddRule(false);
     addNotification({ type: 'success', title: 'Policy Updated', message: `New rule added: "${newRuleText.trim()}"` });
   };
 
-  const handleApproveProposal = (proposalId: string, nodeId: string) => {
-    resolveProposal(proposalId, 'approved');
-    pruneNode(nodeId);
-    addAuditEntry({ nodeId, operation: 'PRUNE', actor: 'evaluator', success: true, details: 'Human approved evaluator prune proposal', policyCheck: 'passed', timestamp: Date.now() });
+  const handleApproveProposal = async (proposalId: string, _nodeId: string) => {
+    await resolveProposal(proposalId, 'approved');
     addNotification({ type: 'info', title: 'Prune Approved', message: 'Evaluator proposal accepted. Branch pruned.' });
-    updateStats({ humanInterventions: usePatchAIStore.getState().stats.humanInterventions + 1 });
   };
 
-  const handleOverrideProposal = (proposalId: string, nodeId: string) => {
-    resolveProposal(proposalId, 'overridden');
-    reviveNode(nodeId);
-    addAuditEntry({ nodeId, operation: 'REVIVE', actor: 'human', success: true, details: 'Human overrode evaluator prune proposal — branch kept alive', policyCheck: 'passed', timestamp: Date.now() });
+  const handleOverrideProposal = async (proposalId: string, _nodeId: string) => {
+    await resolveProposal(proposalId, 'overridden');
     addNotification({ type: 'success', title: '⚡ Override — Branch Kept', message: 'Evaluator proposal rejected. Branch continues.' });
-    updateStats({ humanInterventions: usePatchAIStore.getState().stats.humanInterventions + 1 });
   };
 
-  const handleSnoozeProposal = (proposalId: string) => {
-    resolveProposal(proposalId, 'snoozed');
+  const handleSnoozeProposal = async (proposalId: string) => {
+    await resolveProposal(proposalId, 'snoozed');
     addNotification({ type: 'info', title: 'Snoozed 10 min', message: 'Evaluator will re-evaluate in 10 minutes.' });
   };
 
@@ -131,7 +121,7 @@ export default function PolicyWindowPanel() {
                   <input
                     type="checkbox"
                     checked={rule.enabled}
-                    onChange={() => togglePolicy(rule.id)}
+                    onChange={() => { void togglePolicy(rule.id); }}
                   />
                   <div className="toggle-slider" />
                 </label>

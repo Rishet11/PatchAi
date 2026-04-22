@@ -26,3 +26,4 @@ Thumbs.db
 .env.local
 .env.production
 GraphOS_PRD-1.docx
+patchai.db

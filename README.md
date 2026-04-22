@@ -105,6 +105,10 @@ python main.py
 ```env
 # frontend/.env.local
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+# Backward-compatible fallback (deprecated)
+NEXT_PUBLIC_API_URL=http://localhost:8000
+# Optional: allow local scripted demo when backend is unreachable
+NEXT_PUBLIC_ENABLE_LOCAL_DEMO_FALLBACK=false
 ```
 
 ---
@@ -128,6 +132,20 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 ```
 
 The **State Graph Owner (SGO)** acts as the definitive policy enforcer. All state mutations are validated against the current SGO ruleset and written to the audit log prior to execution.
+
+## MVP Demo Runbook
+
+1. Start backend (`python main.py`) and frontend (`npm run dev`).
+2. Open the dashboard and click **Start Demo**.
+3. Verify backend-driven live updates:
+   - Nodes/edges stream in real time.
+   - Evaluator proposal appears for stalled branch.
+   - Audit log entries include `policyCheck` values (`passed`, `failed`, or `bypassed`).
+4. Validate control operations:
+   - Prune/revive/branch from graph or node panel.
+   - Policy violations return blocked operations with visible notifications.
+5. Optional fallback:
+   - If backend is unavailable and `NEXT_PUBLIC_ENABLE_LOCAL_DEMO_FALLBACK=true`, scripted local demo runs.
 
 ## License
 

@@ -357,7 +357,7 @@ export class DemoSimulation {
       {
         delay: 500,
         action: () => {
-          store.getState().startExecution('Build a REST API for a Task Management System');
+          store.getState().startExecution('Build a REST API for a Task Management System', { preferBackend: false });
           store.getState().addNotification({
             type: 'info',
             title: 'Execution Started',

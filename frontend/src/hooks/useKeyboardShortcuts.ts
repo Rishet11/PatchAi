@@ -31,25 +31,7 @@ export function useKeyboardShortcuts() {
         const nodeId = store.selectedNodeId;
         const node = nodeId ? store.nodes[nodeId] : null;
         if (!node) return;
-        const branchId = `node-human-${Date.now()}`;
-        store.addNode({
-          id: branchId,
-          parentId: node.id,
-          agent: 'human',
-          status: 'active',
-          artifactType: 'decision',
-          title: 'Human Branch (Keyboard)',
-          artifact: '# Human Override Decision\n\nOperator created a branch via keyboard shortcut (B).',
-          contextDelta: 'Human branch via keyboard shortcut',
-          humanOverride: true,
-          evaluatorFlag: false,
-          timestamp: Date.now(),
-          depth: node.depth + 1,
-          branchId: `branch-human-${Date.now()}`,
-          metadata: { humanOverride: true },
-        });
-        store.addEdge({ id: `e-${node.id}-${branchId}`, source: node.id, target: branchId, type: 'human', animated: true });
-        store.addAuditEntry({ nodeId: branchId, operation: 'BRANCH', actor: 'human', success: true, details: 'Keyboard shortcut: B to branch', policyCheck: 'bypassed', timestamp: Date.now() });
+        void store.operateNode(node.id, 'BRANCH', 'human');
         store.addNotification({ type: 'success', title: 'Branch Created', message: 'Human branch created via keyboard (B).' });
       }
 
@@ -59,8 +41,7 @@ export function useKeyboardShortcuts() {
         const node = nodeId ? store.nodes[nodeId] : null;
         if (!node) return;
         if (node.status === 'pruned') return; // already pruned
-        store.pruneNode(node.id);
-        store.addAuditEntry({ nodeId: node.id, operation: 'PRUNE', actor: 'human', success: true, details: 'Keyboard shortcut: Delete to prune', policyCheck: 'passed', timestamp: Date.now() });
+        void store.operateNode(node.id, 'PRUNE', 'human');
         store.addNotification({ type: 'info', title: 'Node Pruned', message: `Node pruned via keyboard (Delete).` });
       }
 
